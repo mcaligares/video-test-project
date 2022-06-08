@@ -66,8 +66,11 @@ export const createVideoElement = (name, description, audioFile, logger, create)
 
   const nameElement = createElement('h1', 'video-element-name', name)
   const descElement = createElement('p', 'video-element-desc', description)
-
-  videoHeader.append(nameElement, descElement)
+  const urlElement = createInput('URL', URL, 'video-input')
+  const loadButton = createButton('load', () => {
+    videoElement.src = document.getElementById('URL').value
+  })
+  videoHeader.append(nameElement, descElement, urlElement, loadButton)
 
   const videoElement = createVideo(URL)
 
@@ -84,7 +87,7 @@ export const createVideoElement = (name, description, audioFile, logger, create)
 
     context.drawImage(videoElement, 0, 0)
     const getBufferText = () => {
-      let text = ''
+      let text = 'Buffer: '
       const buffers = videoElement.buffered
       for (let index = 0; index < buffers.length; index++) {
         const startText = buffers.start(index);
@@ -93,7 +96,8 @@ export const createVideoElement = (name, description, audioFile, logger, create)
       }
       return text
     }
-    bufferText.textContent = getBufferText()
+    bufferText.textContent =  getBufferText()
+    positionControl.value = seg * 100 / videoElement.duration
     console.log('playing', time, seg, videoElement.currentTime)
   }
   const pauseProcess = () => {
@@ -124,9 +128,13 @@ export const createVideoElement = (name, description, audioFile, logger, create)
   const pauseButton = createButton('pause', pauseProcess)
   const stopButton = createButton('stop', stopProcess)
   const volumeControl = createVolume(() => {})
-  const position = createPosition(1000, () => {})
+  const positionControl = createPosition(100, () => {
+    time = (positionControl.value * videoElement.duration / 100) * 1000
+    console.log('position changed', time)
+    renderProcess()
+  })
 
-  seekControl.append(position)
+  seekControl.append(positionControl)
   playerControl.append(playButton, pauseButton, stopButton, volumeControl)
   controlElement.append(seekControl, playerControl)
 
