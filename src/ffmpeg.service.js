@@ -1,5 +1,5 @@
 import { createFFmpeg, fetchFile } from '@ffmpeg/ffmpeg'
-import { createButton, createElement } from './dom.service';
+import { createButton, createElement, createInput } from './dom.service';
 
 const file = 'https://d3gs9askgf5gv8.cloudfront.net/47473dc7-6ba3-4948-a71b-aba8a3a24278-proxy.mp4';
 
@@ -30,7 +30,7 @@ export const createFFmpegElement = () => {
       await fetchFile(file)
     )
   })
-  const runButton = createButton('run script', () => {
+  const runButton = createButton('run getFirstFrame script', () => {
     ffmpeg.run(
       '-i', 
       'sample.mp4',
@@ -45,16 +45,54 @@ export const createFFmpegElement = () => {
       console.error('ffmpeg error', e)
     })
   })
-  const imgElement = document.createElement('img')
-  imgElement.src = '../assets/placeholder.png'
-  const frameButton = createButton('get frame', () => {
-    const data = ffmpeg.FS('readFile', 'out.png')
-    imgElement.src = URL.createObjectURL(new Blob([data.buffer], { type: 'image/png' }))
+  const runAllButton = createButton('run getAllFrames script', () => {
+    ffmpeg.run(
+      '-i', 
+      'sample.mp4',
+      'out-%03d.jpg',
+    ).then(() => {
+      console.log('ffmpeg finish process')
+    }).catch(e => {
+      console.error('ffmpeg error', e)
+    })
   })
 
-  content.append(loadButton, fetchButton, runButton, frameButton)
+  const imgElement = document.createElement('img')
+  imgElement.src = '../assets/placeholder.png'
+  const drawFrame = (frame) => {
+    const frameStr = `${frame}`.padStart(3, '0')
+    try {
+      const data = ffmpeg.FS('readFile', `out-${frameStr}.jpg`)
+      imgElement.src = URL.createObjectURL(new Blob([data.buffer], { type: 'image/png' }))
+    } catch (e) {
+      console.error(e)
+    }
+  }
 
-  element.append(header, content, imgElement)
+  const playButton = createButton('play', () => {
+    let frame = 1
+    let intervalId
+    const process = () => {
+      drawFrame(frame)
+      frame++
+      if (frame === 500) {
+        clearInterval(intervalId)
+      }
+    }
+    intervalId = setInterval(process, 1000/33)
+  })
+
+  const frameContent = createElement('div')
+  const frameControl = createInput('frame', 1)
+  const frameButton = createButton('get frame', () => {
+    const frame = document.getElementById('frame').value
+    drawFrame(frame)
+  })
+  frameContent.append(frameControl, frameButton)
+
+  content.append(loadButton, fetchButton, runButton, runAllButton, playButton)
+
+  element.append(header, content, imgElement, frameContent)
 
   return element
 }
