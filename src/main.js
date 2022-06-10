@@ -1,30 +1,31 @@
 import { createButton, createElement } from './dom.service';
 import { createVideoElement } from './video.service';
 import { createFFmpegElement } from './ffmpeg.service';
+import { createVideoSyncElement } from './videoSync.service';
 import './style.css';
 
 document.addEventListener('DOMContentLoaded', () => {
 
   const ffmpegComponent = createFFmpegElement()
-  const videoComponent = createVideoElement('Video', 'desc')
+  const videoComponent = createVideoElement('Video', 'open the browser console')
+  const videoSyncComponent = createVideoSyncElement('VideoSync', 'open the browser console')
   const contentElement = createElement('div', 'content-element')
-  
-  const button = createButton('test ffmpeg component', () => {
-    const display = ffmpegComponent.style.display
-    if (display === 'none') {
-      ffmpegComponent.style.display = 'block'
-      videoComponent.style.display = 'none'
-      button.textContent = 'test video component'
-    } else {
-      ffmpegComponent.style.display = 'none'
-      videoComponent.style.display = 'block'
-      button.textContent = 'test ffmpeg component'
-    }
-  })
 
-  ffmpegComponent.style.display = 'none'
+  const showComponent = (component) => {
+    ffmpegComponent.style.display = component === 'ffmpeg' ? 'block' : 'none'
+    videoComponent.style.display = component === 'video' ? 'block' : 'none'
+    videoSyncComponent.style.display = component === 'videoSync' ? 'block' : 'none'
+  }
 
-  contentElement.append(button, videoComponent, ffmpegComponent)
+  const buttons = createElement('div', 'header-element')
+  const buttonVideo = createButton('test video', () => showComponent('video'))
+  const buttonFfmpeg = createButton('test ffmpeg', () => showComponent('ffmpeg'))
+  const buttonVideoFrame = createButton('test video frame', () => showComponent('videoSync'))
+  buttons.append(buttonVideo, buttonFfmpeg, buttonVideoFrame)
+
+  showComponent('videoSync')
+
+  contentElement.append(buttons, videoComponent, ffmpegComponent, videoSyncComponent)
   
   document.getElementById('app').append(contentElement)
 
